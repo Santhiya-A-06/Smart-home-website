@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Dashboard | SmartHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .sidebar {
+            width: 280px;
+            padding: 2rem;
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem 5%;
+        }
+
+        .sidebar-link {
+            display: block;
+            padding: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .sidebar-link.active,
+        .sidebar-link:hover {
+            background: var(--glass-border);
+            color: var(--text-main);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="scrolled">
+        <div class="logo"><span>SmartHub</span></div>
+        <div class="user-info">
+            <span id="userName" style="margin-right: 1.5rem;"></span>
+            <button onclick="api.auth.logout()" class="btn btn-outline" style="padding: 0.5rem 1rem;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <a href="#" class="sidebar-link active" onclick="showTab('appointments')"><i
+                    class="fas fa-calendar-alt"></i> My Appointments</a>
+            <a href="#" class="sidebar-link" onclick="showTab('profile')"><i class="fas fa-user-edit"></i> Manage
+                Profile</a>
+        </aside>
+
+        <main class="main-content">
+            <div id="appointments-tab">
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+                    <div class="glass premium-card" style="padding: 1.5rem; text-align: center;">
+                        <h3 id="revenueTotal" class="gold-text" style="font-size: 2.5rem;">$0</h3>
+                        <p style="color: var(--text-muted);">Current Earnings</p>
+                    </div>
+                    <div class="glass premium-card" style="padding: 1.5rem; text-align: center;">
+                        <h3 id="activeJobs" class="gold-text" style="font-size: 2.5rem;">0</h3>
+                        <p style="color: var(--text-muted);">Active Appointments</p>
+                    </div>
+                    <div class="glass premium-card" style="padding: 1.5rem; text-align: center;">
+                        <h3 class="gold-text" style="font-size: 2.5rem;">4.9</h3>
+                        <p style="color: var(--text-muted);">Quality Rating</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 3rem;">
+                    <div>
+                        <h2 class="gold-light-text">Active Booking Requests</h2>
+                        <div id="appointmentList" style="margin-top: 1.5rem;">
+                            <!-- Appointments loaded here -->
+                        </div>
+                    </div>
+                    <div>
+                        <div class="glass" style="padding: 2rem; margin-bottom: 2rem;">
+                            <h3 class="gold-light-text">Earnings Trends</h3>
+                            <canvas id="earningsChart" height="200"></canvas>
+                        </div>
+                        <div class="glass" style="padding: 2rem;">
+                            <h3 class="gold-light-text">Client Feedback</h3>
+                            <div id="reviewsList" style="margin-top: 1rem;">
+                                <div
+                                    style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--glass-border);">
+                                    <div style="color: var(--gold); font-size: 0.8rem;"><i class="fas fa-star"></i><i
+                                            class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                            class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                    <p style="font-size: 0.85rem; margin-top: 0.3rem;">"Very professional and punctual.
+                                        Fixed my sink in no time!"</p>
+                                    <small style="color: var(--text-muted);">- Sarah J.</small>
+                                </div>
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="color: var(--gold); font-size: 0.8rem;"><i class="fas fa-star"></i><i
+                                            class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                            class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                    <p style="font-size: 0.85rem; margin-top: 0.3rem;">"Great work on the rewiring.
+                                        Highly recommended."</p>
+                                    <small style="color: var(--text-muted);">- Mike T.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile-tab" style="display: none;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h2>Service Profile</h2>
+                        <form id="profileForm" class="glass" style="margin-top: 2rem; padding: 2rem;">
+                            <div class="form-group">
+                                <label>Service Category</label>
+                                <select id="profileCategory" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Base Price ($)</label>
+                                <input type="number" id="profilePrice" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Service Description</label>
+                                <textarea id="profileDesc" rows="4"
+                                    placeholder="Briefly describe your expertise..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" id="profileAvailable" checked> I am currently
+                                    available</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Update Profile</button>
+                        </form>
+                    </div>
+                    <div class="glass" style="padding: 2rem;">
+                        <h3>Profile Quality</h3>
+                        <p style="color: var(--text-muted); margin: 1rem 0;">Improve your visibility by adding a
+                            detailed description and competitive pricing.</p>
+                        <div
+                            style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden;">
+                            <div style="width: 75%; height: 100%; background: var(--primary);"></div>
+                        </div>
+                        <p style="font-size: 0.8rem; margin-top: 0.5rem;">Profile Strength: 75%</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        const user = checkAuth();
+        document.getElementById('userName').textContent = `Provider: ${user.username}`;
+
+        function initEarningsChart() {
+            const ctx = document.getElementById('earningsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Earnings',
+                        data: [150, 230, 450, 310, 560, 890, 400],
+                        backgroundColor: '#d4af37'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }
+                }
+            });
+        }
+
+        async function loadCategories() {
+            try {
+                const cats = await api.admin.getCategories();
+                const select = document.getElementById('profileCategory');
+                select.innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            } catch (e) { }
+        }
+
+        async function loadProfile() {
+            try {
+                const p = await api.servicer.getProfile();
+                document.getElementById('profilePrice').value = p.base_price;
+                document.getElementById('profileDesc').value = p.description || "";
+                document.getElementById('profileAvailable').checked = p.availability;
+                // Note: Category selection might need adjustment based on how it's sent back
+            } catch (e) {
+                // Profile might not exist yet
+            }
+        }
+
+        async function loadAppointments() {
+            const list = document.getElementById('appointmentList');
+            list.innerHTML = '<p>Loading...</p>';
+            try {
+                const appts = await api.servicer.getAppointments();
+                list.innerHTML = appts.length ? '' : '<p>No booking requests yet.</p>';
+
+                let revenue = 0;
+                appts.forEach(a => {
+                    revenue += a.amount;
+                    list.innerHTML += `
+                        <div class="glass" style="padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4>Customer: ${a.user_name}</h4>
+                                <p style="color: var(--text-muted);">Date: ${a.scheduled_date}</p>
+                                <p style="color: var(--text-muted);">Location: ${a.location}</p>
+                            </div>
+                            <div>
+                                <span style="background: var(--accent); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem;">${a.status}</span>
+                                <strong style="margin-left: 1rem;">$${a.amount}</strong>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('revenueTotal').textContent = `$${revenue}`;
+                document.getElementById('activeJobs').textContent = appts.filter(a => a.status === 'Confirmed').length;
+
+            } catch (e) {
+                list.innerHTML = `<p>Error loading appointments: ${e.message}</p>`;
+            }
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                category_id: document.getElementById('profileCategory').value,
+                base_price: parseFloat(document.getElementById('profilePrice').value),
+                description: document.getElementById('profileDesc').value,
+                availability: document.getElementById('profileAvailable').checked
+            };
+            try {
+                await api.servicer.updateProfile(data);
+                alert("Profile updated successfully!");
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        function showTab(tab) {
+            document.getElementById('appointments-tab').style.display = tab === 'appointments' ? 'block' : 'none';
+            document.getElementById('profile-tab').style.display = tab === 'profile' ? 'block' : 'none';
+
+            const links = document.querySelectorAll('.sidebar-link');
+            links.forEach(l => l.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            if (tab === 'appointments') loadAppointments();
+        }
+
+        // Init
+        loadCategories();
+        loadProfile();
+        loadAppointments();
+        initEarningsChart();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard | SmartHub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .sidebar {
+            width: 280px;
+            padding: 2rem;
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem 5%;
+        }
+
+        .sidebar-link {
+            display: block;
+            padding: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .sidebar-link.active,
+        .sidebar-link:hover {
+            background: var(--glass-border);
+            color: var(--text-main);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 20px;
+        }
+
+        .provider-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            max-width: 500px;
+            width: 90%;
+            padding: 3rem;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="scrolled">
+        <div class="logo"><span>SmartHub</span></div>
+        <div class="user-info" id="userInfo">
+            <span id="userName" style="margin-right: 1.5rem;"></span>
+            <button onclick="api.auth.logout()" class="btn btn-outline" style="padding: 0.5rem 1rem;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <a href="#" class="sidebar-link active" onclick="showTab('explore')"><i class="fas fa-search"></i> Explore
+                Services</a>
+            <a href="#" class="sidebar-link" onclick="showTab('bookings')"><i class="fas fa-calendar-check"></i> My
+                Bookings</a>
+            <a href="#" class="sidebar-link" onclick="showTab('complaints')"><i class="fas fa-exclamation-circle"></i>
+                Complaints</a>
+        </aside>
+
+        <main class="main-content">
+            <div id="explore-tab">
+                <div class="search-bar glass">
+                    <input type="text" id="serviceSearch" placeholder="What are you looking for?" style="flex: 2;">
+                    <input type="text" id="locationSearch" placeholder="Location" style="flex: 1;">
+                    <button class="btn btn-primary" onclick="searchServices()">Search</button>
+                </div>
+
+                <div id="hero-dashboard" class="glass"
+                    style="padding: 2rem; margin-bottom: 2rem; background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(99, 102, 241, 0.1)); border: 1px solid var(--gold);">
+                    <h2 class="gold-text">Welcome to your SmartHub <span id="welcomeName"></span></h2>
+                    <p style="color: var(--text-muted);">Elevating your home ownership experience with premium care.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                    <div>
+                        <h3>Handpicked Recommendations</h3>
+                        <div class="provider-grid" id="recommendedGrid" style="margin-top: 1rem; margin-bottom: 3rem;">
+                            <!-- Recommended loaded here -->
+                        </div>
+
+                        <h3>Browse Available Specialists</h3>
+                        <div class="provider-grid" id="providerGrid" style="margin-top: 1rem;">
+                            <!-- Providers will be loaded here -->
+                        </div>
+                    </div>
+                    <div>
+                        <div class="glass" style="padding: 2rem; margin-bottom: 2rem;">
+                            <h3 class="gold-light-text"><i class="fas fa-bell"></i> Live Notifications</h3>
+                            <div id="notificationList" style="margin-top: 1rem; font-size: 0.9rem;">
+                                <p style="padding: 0.5rem 0; border-bottom: 1px solid var(--glass-border);">Welcome to
+                                    the new Premium Hub!</p>
+                                <p
+                                    style="padding: 0.5rem 0; border-bottom: 1px solid var(--glass-border); color: var(--text-muted);">
+                                    Your profile is 85% complete.</p>
+                                <p style="padding: 0.5rem 0; color: var(--text-muted);">New electrician added in your
+                                    area.</p>
+                            </div>
+                        </div>
+                        <div class="glass" style="padding: 2rem;">
+                            <h3 class="gold-light-text"><i class="fas fa-shield-heart"></i> SmartHome Protection</h3>
+                            <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-muted);">Your home is
+                                currently secured with our Gold-tier service insurance.</p>
+                            <button class="btn btn-outline"
+                                style="width: 100%; margin-top: 1.5rem; font-size: 0.8rem;">View Policy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bookings-tab" style="display: none;">
+                <h2>My Bookings</h2>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    <div id="bookingList">
+                        <!-- Bookings will be loaded here -->
+                    </div>
+                    <div class="glass" style="padding: 2rem;">
+                        <h3>Activity Summary</h3>
+                        <div style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                                <span>Total Bookings</span>
+                                <span id="totalBookingsCount" style="font-weight: 700;">0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Total Spent</span>
+                                <span id="totalSpent" style="font-weight: 700; color: var(--accent);">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="complaints-tab" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>Resolution Center</h2>
+                    <button class="btn btn-primary" onclick="openComplaintModal()">Submit New
+                        Complaint</button>
+                </div>
+                <div class="glass" style="padding: 2rem;">
+                    <h3 class="gold-light-text mb-4">Past & Active Complaints</h3>
+                    <div id="complaintList" style="margin-top: 1.5rem;">
+                        <!-- Complaints loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content glass">
+            <h3 id="modalProviderName">Book Service</h3>
+            <form id="bookingForm" style="margin-top: 2rem;">
+                <input type="hidden" id="modalProviderId">
+                <div class="form-group">
+                    <label>Schedule Date & Time</label>
+                    <input type="datetime-local" id="scheduleDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Service Location</label>
+                    <input type="text" id="bookingLocation" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Confirm Booking</button>
+                <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;"
+                    onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Complaint Modal -->
+    <div id="complaintModal" class="modal">
+        <div class="modal-content glass">
+            <h3 class="gold-text">File a Complaint</h3>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">We'll help you resolve this issue as quickly as
+                possible.</p>
+            <form id="complaintForm">
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" id="compSubject" placeholder="e.g., Late arrival, Damaged property" required>
+                </div>
+                <div class="form-group">
+                    <label>Service Provider (optional)</label>
+                    <input type="text" id="compProvider" placeholder="Name of the professional">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="compDesc" rows="4" placeholder="Describe what happened..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">File
+                    Complaint</button>
+                <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;"
+                    onclick="closeComplaintModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        const user = checkAuth();
+        document.getElementById('userName').textContent = `Hello, ${user.username}`;
+        document.getElementById('welcomeName').textContent = user.username;
+        document.getElementById('bookingLocation').value = user.location || "";
+
+        async function searchServices() {
+            const query = document.getElementById('serviceSearch').value;
+            const loc = document.getElementById('locationSearch').value;
+            const grid = document.getElementById('providerGrid');
+            grid.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const providers = await api.user.getServices(query, loc);
+                grid.innerHTML = providers.length ? '' : '<p>No providers found in this area.</p>';
+                providers.forEach(p => {
+                    grid.innerHTML += `
+                        <div class="service-card glass">
+                            <i class="fas fa-user-circle" style="font-size: 2rem; color: var(--primary);"></i>
+                            <h3>${p.name}</h3>
+                            <p style="color: var(--primary); font-weight: 700;">${p.category}</p>
+                            <p>${p.description || 'Professional home service.'}</p>
+                            <p style="margin: 1rem 0;">Starting at: <strong>$${p.price}</strong></p>
+                            <button class="btn btn-primary" style="width: 100%;" onclick="openBooking('${p.id}', '${p.name}')">Book Now</button>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                grid.innerHTML = `<p>Error: ${err.message}</p>`;
+            }
+        }
+
+        function openBooking(id, name) {
+            document.getElementById('modalProviderId').value = id;
+            document.getElementById('modalProviderName').textContent = `Book ${name}`;
+            document.getElementById('bookingModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('bookingModal').style.display = 'none';
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const provider_id = document.getElementById('modalProviderId').value;
+            const dateValue = document.getElementById('scheduleDate').value;
+            const location = document.getElementById('bookingLocation').value;
+
+            // Format date for API (YYYY-MM-DD HH:MM)
+            const scheduled_date = dateValue.replace('T', ' ');
+
+            try {
+                await api.user.bookService({ provider_id, scheduled_date, location });
+                alert("Booking successful!");
+                closeModal();
+                showTab('bookings');
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        async function loadMyBookings() {
+            const list = document.getElementById('bookingList');
+            list.innerHTML = '<p>Loading...</p>';
+            try {
+                const bookings = await api.user.getMyBookings();
+                list.innerHTML = bookings.length ? '' : '<p>No bookings yet.</p>';
+
+                let total = 0;
+                bookings.forEach(b => {
+                    total += b.amount;
+                    const statusColor = b.status === 'Completed' ? '#10b981' : 'var(--primary)';
+                    list.innerHTML += `
+                        <div class="glass" style="padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4>${b.provider} - ${b.category}</h4>
+                                <p style="color: var(--text-muted); font-size: 0.9rem;">Date: ${b.scheduled_date}</p>
+                            </div>
+                            <div>
+                                <span style="background: ${statusColor}; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">${b.status}</span>
+                                <strong style="margin-left: 1rem; color: var(--gold-light);">$${b.amount}</strong>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('totalBookingsCount').textContent = bookings.length;
+                document.getElementById('totalSpent').textContent = `$${total}`;
+
+            } catch (err) {
+                list.innerHTML = `<p>Error: ${err.message}</p>`;
+            }
+        }
+
+        async function loadComplaints() {
+            const list = document.getElementById('complaintList');
+            list.innerHTML = '<p>Loading...</p>';
+            try {
+                const complaints = await api.user.getComplaints();
+                list.innerHTML = complaints.length ? '' : '<p>No complaints filed.</p>';
+
+                complaints.forEach(c => {
+                    const statusColor = c.status === 'Resolved' ? '#10b981' : '#f59e0b';
+                    list.innerHTML += `
+                        <div class="glass" style="padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid ${statusColor};">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <h4 style="margin-bottom: 0.5rem;">${c.subject} <small style="color: var(--text-muted); font-weight: normal;">#${c.id}</small></h4>
+                                    <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">${c.description}</p>
+                                    <small style="color: var(--text-muted);">Against: ${c.provider} | Date: ${c.date}</small>
+                                </div>
+                                <span style="background: ${statusColor}22; color: ${statusColor}; padding: 0.2rem 0.6rem; border-radius: 5px; font-size: 0.75rem; font-weight: 700; border: 1px solid ${statusColor}AA;">${c.status}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                list.innerHTML = `<p>Error: ${err.message}</p>`;
+            }
+        }
+
+        function showTab(tab) {
+            document.getElementById('explore-tab').style.display = tab === 'explore' ? 'block' : 'none';
+            document.getElementById('bookings-tab').style.display = tab === 'bookings' ? 'block' : 'none';
+            document.getElementById('complaints-tab').style.display = tab === 'complaints' ? 'block' : 'none';
+
+            const links = document.querySelectorAll('.sidebar-link');
+            links.forEach(l => l.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            if (tab === 'bookings') loadMyBookings();
+            if (tab === 'explore') searchServices();
+            if (tab === 'complaints') loadComplaints();
+        }
+
+        async function loadRecommendations() {
+            const grid = document.getElementById('recommendedGrid');
+            try {
+                const providers = await api.user.getServices("Plumbing"); // Default recommendation
+                grid.innerHTML = providers.slice(0, 2).map(p => `
+                    <div class="service-card glass premium-card">
+                        <i class="fas fa-star" style="font-size: 1.5rem; color: var(--gold); margin-bottom: 1rem;"></i>
+                        <h3 style="font-size: 1.1rem;">${p.name}</h3>
+                        <p style="color: var(--gold); font-size: 0.8rem;">Featured Recommendation</p>
+                        <button class="btn btn-outline" style="width: 100%; margin-top: 1rem; font-size: 0.8rem;" onclick="openBooking('${p.id}', '${p.name}')">Quick Book</button>
+                    </div>
+                `).join('');
+            } catch (e) { }
+        }
+
+        // Complaint Modal Logic
+        function openComplaintModal() { document.getElementById('complaintModal').style.display = 'flex'; }
+        function closeComplaintModal() { document.getElementById('complaintModal').style.display = 'none'; }
+
+        document.getElementById('complaintForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                subject: document.getElementById('compSubject').value,
+                provider: document.getElementById('compProvider').value || 'Unknown',
+                description: document.getElementById('compDesc').value
+            };
+            try {
+                await api.user.fileComplaint(data);
+                alert("Complaint filed. Our support team will review it.");
+                closeComplaintModal();
+                loadComplaints();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        // Initial Load
+        searchServices();
+        loadRecommendations();
+    </script>
+</body>
+
+</html>
